@@ -1,11 +1,12 @@
 package ru.alex9043.productservice.service.impl;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.alex9043.productservice.dto.CreateProductDto;
 import ru.alex9043.productservice.dto.ResponseProductDto;
 import ru.alex9043.productservice.dto.UpdateProductDto;
+import ru.alex9043.productservice.error.exception.DuplicateResourceException;
+import ru.alex9043.productservice.error.exception.ResourceNotFoundException;
 import ru.alex9043.productservice.mapper.ProductMapper;
 import ru.alex9043.productservice.model.Product;
 import ru.alex9043.productservice.repo.ProductRepository;
@@ -30,13 +31,16 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ResponseProductDto getProduct(UUID id) {
         Product product = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Продукта с id: " + id + " не существует"));
+                .orElseThrow(() -> new ResourceNotFoundException("Продукта с id: " + id + " не существует"));
 
         return mapper.toDto(product);
     }
 
     @Override
     public ResponseProductDto createProduct(CreateProductDto createProductDto) {
+        if (repository.existsByName(createProductDto.name())) {
+            throw new DuplicateResourceException("Продукт с именем - " + createProductDto.name() + " уже существует");
+        }
         Product requestProduct = mapper.toEntity(createProductDto);
 
         Product savedProduct = repository.save(requestProduct);
@@ -47,7 +51,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ResponseProductDto updateProduct(UUID id, UpdateProductDto updateProductDto) {
         Product product = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Продукта с id: " + id + " не существует"));
+                .orElseThrow(() -> new ResourceNotFoundException("Продукта с id: " + id + " не существует"));
 
         Product updatedProductEntity = mapper.partialUpdate(updateProductDto, product);
 

@@ -6,4 +6,5 @@ import ru.alex9043.productservice.model.Product;
 import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, UUID> {
+    boolean existsByName(String name);
 }

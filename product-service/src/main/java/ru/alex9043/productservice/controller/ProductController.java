@@ -3,6 +3,7 @@ package ru.alex9043.productservice.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.alex9043.productservice.dto.CreateProductDto;
 import ru.alex9043.productservice.dto.ResponseProductDto;
@@ -29,13 +30,13 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseProductDto> createProduct(@RequestBody CreateProductDto createProductDto) {
+    public ResponseEntity<ResponseProductDto> createProduct(@Validated @RequestBody CreateProductDto createProductDto) {
         return new ResponseEntity<>(productService.createProduct(createProductDto), HttpStatus.CREATED);
     }
 
     @PutMapping("{id}")
     public ResponseEntity<ResponseProductDto> updateProduct(@PathVariable("id") UUID id,
-                                                            @RequestBody UpdateProductDto updateProductDto) {
+                                                            @Validated @RequestBody UpdateProductDto updateProductDto) {
         return new ResponseEntity<>(productService.updateProduct(id, updateProductDto), HttpStatus.OK);
     }
 

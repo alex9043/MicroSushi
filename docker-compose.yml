@@ -1,0 +1,11 @@
+services:
+  postgres-product:
+    image: postgres:15
+    container_name: postgres-product
+    ports:
+      - 5432:5432
+    env_file:
+      - configuration/docker/product/db/.env
+      - configuration/docker/product/db/secret.env
+    volumes:
+      - ./data/postgres/product:/var/lib/postgresql/data

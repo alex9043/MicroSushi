@@ -9,7 +9,9 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.alex9043.productservice.dto.CreateProductDto;
 import ru.alex9043.productservice.dto.ResponseProductDto;
+import ru.alex9043.productservice.dto.UpdateProductDto;
 import ru.alex9043.productservice.error.GlobalExceptionHandler;
 import ru.alex9043.productservice.service.ProductService;
 
@@ -39,7 +41,7 @@ class ProductControllerTest {
 
     @BeforeEach
     void initEach() {
-        dto = new ResponseProductDto(UUID.randomUUID(), "test", BigDecimal.ONE);
+        dto = new ResponseProductDto(UUID.randomUUID(), "test", BigDecimal.ONE, "http://test.test");
     }
 
     @Test
@@ -53,12 +55,15 @@ class ProductControllerTest {
                 .andExpect(jsonPath("$[0].id").value(dto.id().toString()))
                 .andExpect(jsonPath("$[0].name").value(dto.name()))
                 .andExpect(jsonPath("$[0].price").value(dto.price()))
+                .andExpect(jsonPath("$[0].url").value(dto.url()))
                 .andExpect(jsonPath("$[1].id").value(dto.id().toString()))
                 .andExpect(jsonPath("$[1].name").value(dto.name()))
                 .andExpect(jsonPath("$[1].price").value(dto.price()))
+                .andExpect(jsonPath("$[1].url").value(dto.url()))
                 .andExpect(jsonPath("$[2].id").value(dto.id().toString()))
                 .andExpect(jsonPath("$[2].name").value(dto.name()))
-                .andExpect(jsonPath("$[2].price").value(dto.price()));
+                .andExpect(jsonPath("$[2].price").value(dto.price()))
+                .andExpect(jsonPath("$[2].url").value(dto.url()));
     }
 
     @Test
@@ -71,41 +76,52 @@ class ProductControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(dto.id().toString()))
                 .andExpect(jsonPath("$.name").value(dto.name()))
-                .andExpect(jsonPath("$.price").value(dto.price()));
+                .andExpect(jsonPath("$.price").value(dto.price()))
+                .andExpect(jsonPath("$.url").value(dto.url()));
 
         verify(productService, times(1)).getProduct(dto.id());
     }
 
     @Test
     void createProduct_ReturnsProduct_WhenCreated() throws Exception {
+        CreateProductDto createDto = new CreateProductDto(dto.name(), dto.price(), "testImage");
         when(productService.createProduct(any())).thenReturn(dto);
 
         mockMvc.perform(post("/products")
                         .accept(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\"" + dto.id() + "\",\"name\":\"" + dto.name() + "\",\"price\":" + dto.price() + "}")
+                        .content("{\"name\":\"" + createDto.name()
+                                + "\",\"price\":" + createDto.price()
+                                + ",\"base64Image\":\"" + createDto.base64Image()
+                                + "\"}")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(dto.id().toString()))
                 .andExpect(jsonPath("$.name").value(dto.name()))
-                .andExpect(jsonPath("$.price").value(dto.price()));
+                .andExpect(jsonPath("$.price").value(dto.price()))
+                .andExpect(jsonPath("$.url").value(dto.url()));
 
         verify(productService, times(1)).createProduct(any());
     }
 
     @Test
     void updateProduct_ReturnsProduct_WhenUpdated() throws Exception {
+        UpdateProductDto updateDto = new UpdateProductDto(dto.name(), dto.price(), "test");
         when(productService.updateProduct(any(), any())).thenReturn(dto);
 
         mockMvc.perform(put("/products/" + dto.id())
                         .accept(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"" + dto.name() + "\",\"price\":" + dto.price() + "}")
+                        .content("{\"name\":\"" + updateDto.name()
+                                + "\",\"price\":" + updateDto.price()
+                                + ",\"base64Image\":\"" + updateDto.base64Image()
+                                + "\"}")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(dto.id().toString()))
                 .andExpect(jsonPath("$.name").value(dto.name()))
-                .andExpect(jsonPath("$.price").value(dto.price()));
+                .andExpect(jsonPath("$.price").value(dto.price()))
+                .andExpect(jsonPath("$.url").value(dto.url()));
 
         verify(productService, times(1)).updateProduct(eq(dto.id()), any());
     }

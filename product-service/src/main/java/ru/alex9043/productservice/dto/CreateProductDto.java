@@ -1,5 +1,6 @@
 package ru.alex9043.productservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -17,6 +18,8 @@ public record CreateProductDto(
         String name,
         @NotNull(message = "Цена не может быть пустой")
         @Min(message = "Цена не может быть меньше 1", value = 1)
-        BigDecimal price
+        BigDecimal price,
+        @JsonRawValue
+        String base64Image
 ) implements Serializable {
 }

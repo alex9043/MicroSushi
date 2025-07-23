@@ -7,5 +7,5 @@ import java.util.UUID;
 /**
  * DTO for {@link ru.alex9043.productservice.model.Product}
  */
-public record ResponseProductDto(UUID id, String name, BigDecimal price) implements Serializable {
+public record ResponseProductDto(UUID id, String name, BigDecimal price, String url) implements Serializable {
 }

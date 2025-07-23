@@ -10,3 +10,15 @@ spring:
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+minio:
+  endpoint: http://${MINIO_HOST}:${MINIO_PORT}
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
+  bucket: ${MINIO_BUCKET}
+
+server:
+  port: 8081
+
+logging:
+  level:
+    ru.alex9043.productservice: DEBUG

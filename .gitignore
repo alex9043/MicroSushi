@@ -34,3 +34,4 @@ build/
 /configuration/docker/product/db/secret.env
 /configuration/docker/product/secret.env
 /data/
+/configuration/docker/minio/secret.env

@@ -15,6 +15,7 @@ import ru.alex9043.productservice.error.exception.ResourceNotFoundException;
 import ru.alex9043.productservice.mapper.ProductMapper;
 import ru.alex9043.productservice.model.Product;
 import ru.alex9043.productservice.repo.ProductRepository;
+import ru.alex9043.productservice.utils.ImageUtils;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -35,6 +36,9 @@ class ProductServiceImplTest {
     @Mock
     ProductMapper mapper;
 
+    @Mock
+    ImageUtils imageUtils;
+
     @InjectMocks
     ProductServiceImpl service;
 
@@ -46,17 +50,21 @@ class ProductServiceImplTest {
         UUID uuid = UUID.randomUUID();
         String name = "test";
         BigDecimal price = BigDecimal.ONE;
+        String imageKey = "testKey";
+        String url = "testUrl";
         product = new Product();
         product.setId(uuid);
         product.setName(name);
         product.setPrice(price);
+        product.setImageKey(imageKey);
+        product.setUrl(url);
 
-        dto = new ResponseProductDto(uuid, name, price);
+        dto = new ResponseProductDto(uuid, name, price, url);
     }
 
     @AfterEach
     void TearDown() {
-        verifyNoMoreInteractions(repository, mapper);
+        verifyNoMoreInteractions(repository, mapper, imageUtils);
     }
 
     @Test
@@ -78,12 +86,14 @@ class ProductServiceImplTest {
 
     @Test
     void getAllProducts_ReturnsEmptyList_WhenEmpty() {
-        when(repository.findAll()).thenReturn(Collections.emptyList());
+        List<Product> emptyList = Collections.emptyList();
+        when(repository.findAll()).thenReturn(emptyList);
 
         List<ResponseProductDto> allProducts = service.getAllProducts();
 
         assertEquals(0, allProducts.size());
         verify(repository, times(1)).findAll();
+        verify(mapper, times(1)).toDtoList(emptyList);
     }
 
     @Test
@@ -115,8 +125,12 @@ class ProductServiceImplTest {
 
     @Test
     void createProduct_returnsDto_WhenSaved() {
-        CreateProductDto testDto = new CreateProductDto("test", BigDecimal.ONE);
+        String imageUuid = UUID.randomUUID().toString();
+        String url = "http://test.test";
+        CreateProductDto testDto = new CreateProductDto("test", BigDecimal.ONE, "test");
 
+        when(imageUtils.getKey()).thenReturn(imageUuid);
+        when(imageUtils.UploadImageAndGetLink(any(), any())).thenReturn(url);
         when(mapper.toEntity(any())).thenReturn(product);
         when(repository.save(any())).thenReturn(product);
         when(mapper.toDto(any())).thenReturn(dto);
@@ -125,6 +139,9 @@ class ProductServiceImplTest {
 
         assertEquals(dto, actual);
 
+        verify(repository, times(1)).existsByName(testDto.name());
+        verify(imageUtils, times(1)).getKey();
+        verify(imageUtils, times(1)).UploadImageAndGetLink(imageUuid, testDto.base64Image());
         verify(mapper, times(1)).toEntity(testDto);
         verify(repository, times(1)).save(product);
         verify(mapper, times(1)).toDto(product);
@@ -132,7 +149,7 @@ class ProductServiceImplTest {
 
     @Test
     void createProduct_throwsDuplicateResourceException_WhenExist() {
-        CreateProductDto testDto = new CreateProductDto("test", BigDecimal.ONE);
+        CreateProductDto testDto = new CreateProductDto("test", BigDecimal.ONE, "test");
         when(repository.existsByName(any())).thenReturn(true);
 
         DuplicateResourceException exception = assertThrows(
@@ -146,7 +163,7 @@ class ProductServiceImplTest {
     @Test
     void updateProduct_ReturnsDto_WhenUpdated() {
         UUID uuid = UUID.randomUUID();
-        UpdateProductDto testDto = new UpdateProductDto("test", BigDecimal.ONE);
+        UpdateProductDto testDto = new UpdateProductDto("test", BigDecimal.ONE, "test");
 
         when(repository.findById(any())).thenReturn(Optional.of(product));
         when(mapper.partialUpdate(any(), any())).thenReturn(product);

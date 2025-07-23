@@ -30,6 +30,12 @@ public class Product {
     @Column(name = "price", nullable = false, precision = 19, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "image_key", unique = true)
+    private String imageKey;
+
+    @Column(name = "url", unique = true)
+    private String url;
+
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;

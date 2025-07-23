@@ -11,6 +11,7 @@ import ru.alex9043.productservice.mapper.ProductMapper;
 import ru.alex9043.productservice.model.Product;
 import ru.alex9043.productservice.repo.ProductRepository;
 import ru.alex9043.productservice.service.ProductService;
+import ru.alex9043.productservice.utils.ImageUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository repository;
     private final ProductMapper mapper;
+    private final ImageUtils imageUtils;
 
     @Override
     public List<ResponseProductDto> getAllProducts() {
@@ -41,7 +43,14 @@ public class ProductServiceImpl implements ProductService {
         if (repository.existsByName(createProductDto.name())) {
             throw new DuplicateResourceException("Продукт с именем - " + createProductDto.name() + " уже существует");
         }
+
+        String imageKey = imageUtils.getKey();
+        String imageUrl = imageUtils.UploadImageAndGetLink(imageKey, createProductDto.base64Image());
+
         Product requestProduct = mapper.toEntity(createProductDto);
+
+        requestProduct.setImageKey(imageKey);
+        requestProduct.setUrl(imageUrl);
 
         Product savedProduct = repository.save(requestProduct);
 

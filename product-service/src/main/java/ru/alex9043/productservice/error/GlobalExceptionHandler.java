@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.alex9043.productservice.error.dto.ErrorResponse;
 import ru.alex9043.productservice.error.dto.ValidationError;
 import ru.alex9043.productservice.error.exception.DuplicateResourceException;
+import ru.alex9043.productservice.error.exception.InvalidImageException;
 import ru.alex9043.productservice.error.exception.ResourceNotFoundException;
 import ru.alex9043.productservice.error.mapper.ErrorMapper;
 
@@ -32,6 +33,19 @@ public class GlobalExceptionHandler {
                 null);
 
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidImageException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidImage(
+            InvalidImageException ex,
+            HttpServletRequest request) {
+        ErrorResponse errorResponse = mapper.toResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request.getRequestURI(),
+                null);
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(DuplicateResourceException.class)

@@ -51,16 +51,18 @@ class ProductServiceImplTest {
         UUID uuid = UUID.randomUUID();
         String name = "test";
         BigDecimal price = BigDecimal.ONE;
+        String description = "test";
         String imageKey = "testKey";
         String url = "testUrl";
         product = new Product();
         product.setId(uuid);
         product.setName(name);
         product.setPrice(price);
+        product.setDescription(description);
         product.setImageKey(imageKey);
         product.setUrl(url);
 
-        dto = new ResponseProductDto(uuid, name, price, url);
+        dto = new ResponseProductDto(uuid, name, price, description, url);
     }
 
     @AfterEach
@@ -128,8 +130,8 @@ class ProductServiceImplTest {
     void createProduct_returnsDto_WhenSaved() {
         String imageUuid = UUID.randomUUID().toString();
         String url = "http://test.test";
-        CreateProductDto testDto = new CreateProductDto("test", BigDecimal.ONE, "test");
-        ProductDto productDto = new ProductDto("test", BigDecimal.ONE, "test", "test", "test");
+        CreateProductDto testDto = new CreateProductDto("test", BigDecimal.ONE, "test", "test");
+        ProductDto productDto = new ProductDto("test", BigDecimal.ONE, "test", "test", "test", "test");
 
         when(repository.existsByName(any())).thenReturn(false);
         when(mapper.toDto((CreateProductDto) any())).thenReturn(productDto);
@@ -154,7 +156,7 @@ class ProductServiceImplTest {
 
     @Test
     void createProduct_throwsDuplicateResourceException_WhenExist() {
-        CreateProductDto testDto = new CreateProductDto("test", BigDecimal.ONE, "test");
+        CreateProductDto testDto = new CreateProductDto("test", BigDecimal.ONE, "test", "test");
         when(repository.existsByName(any())).thenReturn(true);
 
         DuplicateResourceException exception = assertThrows(
@@ -169,8 +171,8 @@ class ProductServiceImplTest {
     void updateProduct_ReturnsDto_WhenUpdated() {
         UUID uuid = UUID.randomUUID();
         String url = "http://test.test";
-        UpdateProductDto testDto = new UpdateProductDto("test", BigDecimal.ONE, "test");
-        ProductDto productDto = new ProductDto("test", BigDecimal.ONE, "test", "test", "test");
+        UpdateProductDto testDto = new UpdateProductDto("test", BigDecimal.ONE, "test", "test");
+        ProductDto productDto = new ProductDto("test", BigDecimal.ONE, "test", "test", "test", "test");
 
         when(repository.findById(any())).thenReturn(Optional.of(product));
         when(mapper.toDto((UpdateProductDto) any())).thenReturn(productDto);
@@ -197,11 +199,12 @@ class ProductServiceImplTest {
     @Test
     void updateProduct_ThrowsResourceNotFoundException_WhenNotFound() {
         UUID uuid = UUID.randomUUID();
+
         when(repository.findById(any())).thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
-                () -> service.updateProduct(uuid, any()));
+                () -> service.updateProduct(uuid, new UpdateProductDto("test", BigDecimal.ONE, "test", "test")));
 
         assertEquals("Продукта с id: " + uuid + " не существует", exception.getMessage());
         verify(repository, times(1)).findById(uuid);

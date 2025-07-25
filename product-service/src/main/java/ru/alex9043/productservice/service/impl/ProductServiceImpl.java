@@ -3,6 +3,7 @@ package ru.alex9043.productservice.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.alex9043.productservice.dto.CreateProductDto;
+import ru.alex9043.productservice.dto.ProductDto;
 import ru.alex9043.productservice.dto.ResponseProductDto;
 import ru.alex9043.productservice.dto.UpdateProductDto;
 import ru.alex9043.productservice.error.exception.DuplicateResourceException;
@@ -44,15 +45,13 @@ public class ProductServiceImpl implements ProductService {
             throw new DuplicateResourceException("Продукт с именем - " + createProductDto.name() + " уже существует");
         }
 
-        String imageKey = imageUtils.getKey();
-        String imageUrl = imageUtils.UploadImageAndGetLink(imageKey, createProductDto.base64Image());
+        ProductDto dto = mapper.toDto(createProductDto);
+        dto.setImageKey(imageUtils.getKey());
+        dto.setUrl(imageUtils.uploadImageAndGetLink(dto.getImageKey(), dto.getBase64Image()));
 
-        Product requestProduct = mapper.toEntity(createProductDto);
+        Product rawProduct = mapper.toEntity(dto);
 
-        requestProduct.setImageKey(imageKey);
-        requestProduct.setUrl(imageUrl);
-
-        Product savedProduct = repository.save(requestProduct);
+        Product savedProduct = repository.save(rawProduct);
 
         return mapper.toDto(savedProduct);
     }
@@ -62,17 +61,27 @@ public class ProductServiceImpl implements ProductService {
         Product product = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Продукта с id: " + id + " не существует"));
 
-        Product updatedProductEntity = mapper.partialUpdate(updateProductDto, product);
+        imageUtils.deleteImageByKey(product.getImageKey());
 
-        Product updatedProduct = repository.save(updatedProductEntity);
-        return mapper.toDto(updatedProduct);
+        ProductDto dto = mapper.toDto(updateProductDto);
+        dto.setImageKey(imageUtils.getKey());
+        dto.setUrl(imageUtils.uploadImageAndGetLink(dto.getImageKey(), dto.getBase64Image()));
+
+        Product rawProduct = mapper.partialUpdate(dto, product);
+
+        Product savedProduct = repository.save(rawProduct);
+
+        return mapper.toDto(savedProduct);
     }
 
     @Override
     public void deleteProduct(UUID id) {
-        if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Продукта с id: " + id + " не существует");
-        }
+        Product product = repository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Продукта с id: " + id + " не существует")
+        );
+
+        imageUtils.deleteImageByKey(product.getImageKey());
+
         repository.deleteById(id);
     }
 }

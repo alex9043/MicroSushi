@@ -13,7 +13,7 @@ import java.util.UUID;
 public class ImageUtils {
     private final FileStorageService fileStorageService;
 
-    public String UploadImageAndGetLink(String key, String base64Image) {
+    public String uploadImageAndGetLink(String key, String base64Image) {
         if (base64Image == null || base64Image.isBlank())
             throw new InvalidImageException("Неправильный формат изображения");
 
@@ -26,6 +26,10 @@ public class ImageUtils {
         } catch (IllegalArgumentException e) {
             throw new InvalidImageException("Неправильный формат изображения");
         }
+    }
+
+    public void deleteImageByKey(String key) {
+        fileStorageService.deleteFile(key);
     }
 
     public String getKey() {

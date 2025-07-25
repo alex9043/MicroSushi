@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.alex9043.productservice.dto.CreateProductDto;
+import ru.alex9043.productservice.dto.ProductDto;
 import ru.alex9043.productservice.dto.ResponseProductDto;
 import ru.alex9043.productservice.dto.UpdateProductDto;
 import ru.alex9043.productservice.error.exception.DuplicateResourceException;
@@ -100,7 +101,7 @@ class ProductServiceImplTest {
     void getProduct_ReturnsDto_WhenFound() {
         UUID uuid = UUID.randomUUID();
         when(repository.findById(any())).thenReturn(Optional.of(product));
-        when(mapper.toDto(any())).thenReturn(dto);
+        when(mapper.toDto((Product) any())).thenReturn(dto);
 
         ResponseProductDto actual = service.getProduct(uuid);
 
@@ -128,21 +129,25 @@ class ProductServiceImplTest {
         String imageUuid = UUID.randomUUID().toString();
         String url = "http://test.test";
         CreateProductDto testDto = new CreateProductDto("test", BigDecimal.ONE, "test");
+        ProductDto productDto = new ProductDto("test", BigDecimal.ONE, "test", "test", "test");
 
+        when(repository.existsByName(any())).thenReturn(false);
+        when(mapper.toDto((CreateProductDto) any())).thenReturn(productDto);
         when(imageUtils.getKey()).thenReturn(imageUuid);
-        when(imageUtils.UploadImageAndGetLink(any(), any())).thenReturn(url);
+        when(imageUtils.uploadImageAndGetLink(any(), any())).thenReturn(url);
         when(mapper.toEntity(any())).thenReturn(product);
         when(repository.save(any())).thenReturn(product);
-        when(mapper.toDto(any())).thenReturn(dto);
+        when(mapper.toDto((Product) any())).thenReturn(dto);
 
         ResponseProductDto actual = service.createProduct(testDto);
 
         assertEquals(dto, actual);
 
         verify(repository, times(1)).existsByName(testDto.name());
+        verify(mapper, times(1)).toDto(testDto);
         verify(imageUtils, times(1)).getKey();
-        verify(imageUtils, times(1)).UploadImageAndGetLink(imageUuid, testDto.base64Image());
-        verify(mapper, times(1)).toEntity(testDto);
+        verify(imageUtils, times(1)).uploadImageAndGetLink(productDto.getImageKey(), productDto.getBase64Image());
+        verify(mapper, times(1)).toEntity(productDto);
         verify(repository, times(1)).save(product);
         verify(mapper, times(1)).toDto(product);
     }
@@ -163,19 +168,28 @@ class ProductServiceImplTest {
     @Test
     void updateProduct_ReturnsDto_WhenUpdated() {
         UUID uuid = UUID.randomUUID();
+        String url = "http://test.test";
         UpdateProductDto testDto = new UpdateProductDto("test", BigDecimal.ONE, "test");
+        ProductDto productDto = new ProductDto("test", BigDecimal.ONE, "test", "test", "test");
 
         when(repository.findById(any())).thenReturn(Optional.of(product));
+        when(mapper.toDto((UpdateProductDto) any())).thenReturn(productDto);
+        when(imageUtils.getKey()).thenReturn(uuid.toString());
+        when(imageUtils.uploadImageAndGetLink(any(), any())).thenReturn(url);
         when(mapper.partialUpdate(any(), any())).thenReturn(product);
         when(repository.save(any())).thenReturn(product);
-        when(mapper.toDto(any())).thenReturn(dto);
+        when(mapper.toDto((Product) any())).thenReturn(dto);
 
         ResponseProductDto actual = service.updateProduct(uuid, testDto);
 
         assertEquals(dto, actual);
 
         verify(repository, times(1)).findById(uuid);
-        verify(mapper, times(1)).partialUpdate(testDto, product);
+        verify(imageUtils, times(1)).deleteImageByKey(product.getImageKey());
+        verify(mapper, times(1)).toDto(testDto);
+        verify(imageUtils, times(1)).getKey();
+        verify(imageUtils, times(1)).uploadImageAndGetLink(productDto.getImageKey(), productDto.getBase64Image());
+        verify(mapper, times(1)).partialUpdate(productDto, product);
         verify(repository, times(1)).save(product);
         verify(mapper, times(1)).toDto(product);
     }
@@ -196,18 +210,19 @@ class ProductServiceImplTest {
     @Test
     void deleteProduct_ShouldDeleteProduct_WhenProductExists() {
         UUID uuid = UUID.randomUUID();
-        when(repository.existsById(any())).thenReturn(true);
+        when(repository.findById(any())).thenReturn(Optional.of(product));
 
         service.deleteProduct(uuid);
 
-        verify(repository, times(1)).existsById(uuid);
+        verify(repository, times(1)).findById(uuid);
+        verify(imageUtils, times(1)).deleteImageByKey(product.getImageKey());
         verify(repository, times(1)).deleteById(uuid);
     }
 
     @Test
     void deleteProduct_ThrowsResourceNotFoundException_WhenNotFound() {
         UUID uuid = UUID.randomUUID();
-        when(repository.existsById(any())).thenReturn(false);
+        when(repository.findById(any())).thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
@@ -215,6 +230,6 @@ class ProductServiceImplTest {
 
         assertEquals("Продукта с id: " + uuid + " не существует", exception.getMessage());
 
-        verify(repository, times(1)).existsById(uuid);
+        verify(repository, times(1)).findById(uuid);
     }
 }

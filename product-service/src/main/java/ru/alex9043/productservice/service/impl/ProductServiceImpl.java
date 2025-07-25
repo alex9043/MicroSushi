@@ -7,6 +7,7 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.alex9043.productservice.dto.CreateProductDto;
 import ru.alex9043.productservice.dto.ProductDto;
 import ru.alex9043.productservice.dto.ResponseProductDto;
@@ -32,6 +33,7 @@ public class ProductServiceImpl implements ProductService {
     private final ImageUtils imageUtils;
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(cacheNames = CACHE_NAME, key = "'all'")
     public List<ResponseProductDto> getAllProducts() {
         log.info("Попытка получить все продукты");
@@ -42,6 +44,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(cacheNames = CACHE_NAME, key = "#id")
     public ResponseProductDto getProduct(UUID id) {
         log.info("Попытка получить продукт");
@@ -54,6 +57,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     @Caching(
             evict = @CacheEvict(cacheNames = CACHE_NAME, key = "'all'"),
             put = @CachePut(cacheNames = CACHE_NAME, key = "#result.id()")
@@ -84,6 +88,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     @Caching(
             evict = @CacheEvict(cacheNames = CACHE_NAME, key = "'all'"),
             put = @CachePut(cacheNames = CACHE_NAME, key = "#id")
@@ -111,13 +116,14 @@ public class ProductServiceImpl implements ProductService {
         return mapper.toDto(savedProduct);
     }
 
+    @Override
+    @Transactional
     @Caching(
             evict = {
                     @CacheEvict(cacheNames = CACHE_NAME, key = "'all'"),
                     @CacheEvict(cacheNames = CACHE_NAME, key = "#id")
             }
     )
-    @Override
     public void deleteProduct(UUID id) {
         log.info("Попытка удаление продукта");
         Product product = repository.findById(id).orElseThrow(

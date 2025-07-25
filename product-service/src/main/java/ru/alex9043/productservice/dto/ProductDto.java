@@ -13,8 +13,9 @@ import java.math.BigDecimal;
 public class ProductDto {
         private String name;
         private BigDecimal price;
-        @JsonRawValue
-        private String base64Image;
+    private String description;
+    @JsonRawValue
+    private String base64Image;
         private String imageKey;
         private String url;
 }

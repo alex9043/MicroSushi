@@ -10,6 +10,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
 minio:
   endpoint: http://${MINIO_HOST}:${MINIO_PORT}
   access-key: ${MINIO_ACCESS_KEY}

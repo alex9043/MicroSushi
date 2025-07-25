@@ -30,6 +30,9 @@ public class Product {
     @Column(name = "price", nullable = false, precision = 19, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "description", nullable = false)
+    private String description;
+
     @Column(name = "image_key", unique = true)
     private String imageKey;
 

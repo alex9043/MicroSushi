@@ -1,6 +1,10 @@
 package ru.alex9043.productservice.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import ru.alex9043.productservice.dto.CreateProductDto;
 import ru.alex9043.productservice.dto.ProductDto;
@@ -20,11 +24,13 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
+    private static final String CACHE_NAME = "products";
     private final ProductRepository repository;
     private final ProductMapper mapper;
     private final ImageUtils imageUtils;
 
     @Override
+    @Cacheable(cacheNames = CACHE_NAME, key = "'all'")
     public List<ResponseProductDto> getAllProducts() {
         List<Product> allProducts = repository.findAll();
 
@@ -32,6 +38,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(cacheNames = CACHE_NAME, key = "#id")
     public ResponseProductDto getProduct(UUID id) {
         Product product = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Продукта с id: " + id + " не существует"));
@@ -40,6 +47,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Caching(
+            evict = @CacheEvict(cacheNames = CACHE_NAME, key = "'all'"),
+            put = @CachePut(cacheNames = CACHE_NAME, key = "#result.id()")
+    )
     public ResponseProductDto createProduct(CreateProductDto createProductDto) {
         if (repository.existsByName(createProductDto.name())) {
             throw new DuplicateResourceException("Продукт с именем - " + createProductDto.name() + " уже существует");
@@ -57,6 +68,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Caching(
+            evict = @CacheEvict(cacheNames = CACHE_NAME, key = "'all'"),
+            put = @CachePut(cacheNames = CACHE_NAME, key = "#id")
+    )
     public ResponseProductDto updateProduct(UUID id, UpdateProductDto updateProductDto) {
         Product product = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Продукта с id: " + id + " не существует"));
@@ -74,6 +89,12 @@ public class ProductServiceImpl implements ProductService {
         return mapper.toDto(savedProduct);
     }
 
+    @Caching(
+            evict = {
+                    @CacheEvict(cacheNames = CACHE_NAME, key = "'all'"),
+                    @CacheEvict(cacheNames = CACHE_NAME, key = "#id")
+            }
+    )
     @Override
     public void deleteProduct(UUID id) {
         Product product = repository.findById(id).orElseThrow(

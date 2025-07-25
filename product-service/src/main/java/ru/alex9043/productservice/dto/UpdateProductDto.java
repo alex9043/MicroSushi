@@ -14,5 +14,6 @@ public record UpdateProductDto(
         @Size(message = "Имя не может быть меньше 2 и больше 255 символов", min = 2, max = 255) String name,
         @Min(message = "Цена не может быть меньше 1", value = 1) BigDecimal price,
         @JsonRawValue
-        String base64Image) implements Serializable {
+        String base64Image,
+        @Size(message = "Описание не может быть меньше 2 и больше 255 символов", min = 2, max = 255) String description) implements Serializable {
 }

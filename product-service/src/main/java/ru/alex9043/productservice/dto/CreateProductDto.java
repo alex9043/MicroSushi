@@ -19,6 +19,10 @@ public record CreateProductDto(
         @NotNull(message = "Цена не может быть пустой")
         @Min(message = "Цена не может быть меньше 1", value = 1)
         BigDecimal price,
+
+        @Size(message = "Описание не может быть меньше 2 и больше 255 символов", min = 2, max = 255)
+        @NotBlank(message = "Описание не может быть пустым")
+        String description,
         @JsonRawValue
         String base64Image
 ) implements Serializable {

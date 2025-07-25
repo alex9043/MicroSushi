@@ -1,6 +1,5 @@
 package ru.alex9043.productservice.config;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +12,6 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 import java.net.URI;
 
 @Configuration
-@Slf4j
 public class S3Config {
     @Value("${minio.endpoint}")
     private String endpoint;
@@ -26,7 +24,6 @@ public class S3Config {
 
     @Bean
     public S3Client s3Client() {
-        log.info("URL - " + endpoint + "\naccess - " + accessKey + "\nsecret - " + secretKey);
         return S3Client.builder()
                 .endpointOverride(URI.create(endpoint))
                 .credentialsProvider(StaticCredentialsProvider.create(

@@ -1,6 +1,7 @@
 package ru.alex9043.productservice.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.alex9043.productservice.service.FileStorageService;
@@ -12,6 +13,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FileStorageServiceImpl implements FileStorageService {
     private final S3Client s3Client;
 
@@ -20,6 +22,8 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public void uploadFile(String key, byte[] file) {
+        log.info("Попытка получить изображение по ключу");
+        log.debug("Ключ - {}", key);
         if (!bucketExists(bucketName)) {
             createBucket();
         }
@@ -31,11 +35,13 @@ public class FileStorageServiceImpl implements FileStorageService {
                         .build(),
                 RequestBody.fromBytes(file)
         );
+        log.info("Изображение получено");
     }
 
     private void createBucket() {
+        log.info("Попытка создать bucket");
         s3Client.createBucket(request -> request.bucket(bucketName));
-
+        log.info("bucket создан");
         String policyJson = String.format("""
                 {
                     "Version": "2012-10-17",
@@ -54,10 +60,13 @@ public class FileStorageServiceImpl implements FileStorageService {
                 .bucket(bucketName)
                 .policy(policyJson)
                 .build());
+        log.info("В bucket установлены права для чтения");
     }
 
     @Override
     public String getFileUrl(String key) {
+        log.info("Попытка получить url для изображения по ключу");
+        log.debug("Ключ - {}", key);
         return s3Client.utilities()
                 .getUrl(builder -> builder
                         .bucket(bucketName)
@@ -66,16 +75,21 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public void deleteFile(String key) {
+        log.info("Попытка удалить изображение по ключу");
+        log.debug("Ключ - {}", key);
         s3Client.deleteObject(request -> request
                 .bucket(bucketName)
                 .key(key));
     }
 
     private boolean bucketExists(String bucketName) {
+        log.info("Проверка на существование bucket с именем - {}", bucketName);
         try {
             s3Client.headBucket(request -> request.bucket(bucketName));
+            log.info("Bucket существует");
             return true;
         } catch (NoSuchBucketException e) {
+            log.error("Bucket не существует");
             return false;
         }
     }

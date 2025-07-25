@@ -27,5 +27,7 @@ server:
   port: 8081
 
 logging:
+  file:
+    path: logs/
   level:
     ru.alex9043.productservice: DEBUG

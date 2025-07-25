@@ -25,6 +25,7 @@
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
         <s3.version>2.32.4</s3.version>
         <spring-data-redis.version>3.5.2</spring-data-redis.version>
+        <logstash-logback-encoder.version>8.0</logstash-logback-encoder.version>
     </properties>
 
     <dependencies>
@@ -89,6 +90,11 @@
             <artifactId>s3</artifactId>
             <version>${s3.version}</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>${logstash-logback-encoder.version}</version>
         </dependency>
 
         <dependency>
